@@ -1,7 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const mongoose = require('mongoose');
+const connectDB = require('./config/db');
+const path = require('path');
+const passport = require('passport');
+const session = require('express-session');
+const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const apartmentRoutes = require('./routes/apartmentRoutes');
 
@@ -14,33 +18,37 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
-// Connect to MongoDB
-const startServer = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('MongoDB connected successfully');
+// Configure express-session middleware
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key', // Use a secure secret key
+    resave: false, // Don't save the session if it wasn't modified
+    saveUninitialized: false, // Don't create a session until something is stored
+    cookie: { secure: process.env.NODE_ENV === 'production' }, // Use secure cookies in production
+  })
+);
 
-    // Start the server only after MongoDB connection is established
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-    process.exit(1); // Exit the process if the connection fails
-  }
-};
+// Initialize Passport and restore authentication state from the session
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Import Passport configuration
+require('./config/passport');
+
+// Serve static files from the 'uploads' folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.get('/', (req, res) => {
   res.send('Welcome to ShortletReview API');
 });
-
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/apartments', apartmentRoutes);
 
-
-// Start the application
-startServer();
+// Connect to MongoDB and start the server
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+});
