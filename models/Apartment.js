@@ -9,7 +9,7 @@ const apartmentSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['Studio', '1-Bedroom', '2-Bedroom', '3-Bedroom', 'Penthouse', 'Villa', 'Condo'], // Dropdown options
+    enum: ['Studio', '1-Bedroom', '2-Bedroom', '3-Bedroom', 'Penthouse', 'Villa', 'Condo'],
   },
   country: {
     type: String,
@@ -32,23 +32,33 @@ const apartmentSchema = new mongoose.Schema({
     default: 0,
   },
   images: {
-    type: [String], // Array of image URLs
+    type: [String],
     required: false,
     default: [],
   },
   proofOfOwnership: {
-    type: String, // URL to the proof of ownership file (image or PDF)
+    type: String,
     required: false,
   },
   addedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Reference to the user who added the apartment
+    ref: 'User',
     required: false,
   },
-}, {
-  timestamps: true, // Adds `createdAt` and `updatedAt` fields
+  
+  // New fields for claiming
+  isClaimed: { type: Boolean, default: false }, // False until verified
+  claimedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }, // User who claimed
+  claimDocuments: { type: [String], default: [] }, // URLs of verification docs
+  claimStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }, // Status of claim
+},  {
+  timestamps: true,
 });
 
-const Apartment = mongoose.model('Apartment', apartmentSchema);
+// Add a text index on name, city, and country fields
+apartmentSchema.index({ name: 'text', city: 'text', country: 'text' });
+
+
+const Apartment = mongoose.models.Apartment || mongoose.model('Apartment', apartmentSchema);
 
 module.exports = Apartment;

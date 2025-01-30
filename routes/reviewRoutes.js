@@ -1,12 +1,15 @@
 const express = require('express');
-const { addReview, getReview } = require('../controllers/reviewController');
 const router = express.Router();
-const Review = require('../models/Review');
+const { writeReview, rateReview, replyToReview } = require('../controllers/reviewController');
+const auth = require('../middleware/auth');
 
-// Add Review
-router.post('/', addReview)
+// Write a review & give star rating
+router.post('/:apartmentId', auth, writeReview);
 
-// Get Reviews for an Apartment
-router.get('/:apartmentId', getReview);
+// Like or Dislike a review
+router.post('/:reviewId/rate', auth, rateReview);
+
+// Reply to a review
+router.post('/:reviewId/reply', auth, replyToReview);
 
 module.exports = router;

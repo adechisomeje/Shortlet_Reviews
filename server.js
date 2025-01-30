@@ -8,6 +8,7 @@ const session = require('express-session');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const apartmentRoutes = require('./routes/apartmentRoutes');
+const reviewRoutes = require('./routes/reviewRoutes')
 
 dotenv.config();
 
@@ -16,7 +17,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000", // Allow requests from your frontend
+  credentials: true, // Enable cookies if necessary
+}));
 
 // Configure express-session middleware
 app.use(
@@ -45,6 +49,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/apartments', apartmentRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Connect to MongoDB and start the server
 connectDB().then(() => {
